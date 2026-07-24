@@ -1,4 +1,4 @@
-# 환경 변수 / API 키 — 절대 커밋 금지
+# Environment variables / API keys — never commit
 .env
 .env.*
 *.env
@@ -19,14 +19,14 @@ __pycache__/
 .venv/
 venv/
 
-# OS / 편집기
+# OS / editors
 .DS_Store
 Thumbs.db
 desktop.ini
 ~$*
 *.tmp
 
-# Claude 로컬 설정
+# Claude local settings
 .claude/settings.local.json
 
 # Eval run artifacts
