@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 const PERSONAS = [
-  { id: "oracle", name: "The Oracle", emoji: "🦉", tagline: "Buys great businesses at fair prices — and waits" },
-  { id: "moonshot", name: "Moonshot", emoji: "🚀", tagline: "Bets big on the future, loves a dip" },
-  { id: "diamond_hands", name: "Diamond Hands", emoji: "💎", tagline: "Does his homework, sides with the little guy" },
-  { id: "cassandra", name: "Cassandra", emoji: "🌧️", tagline: "Asks what could go wrong — before anyone else" },
+  { id: "oracle", name: "Warren Buffett", shortName: "Buffett", emoji: "🦉", tagline: "Buys great businesses at fair prices — and waits" },
+  { id: "moonshot", name: "Cathie Wood", shortName: "Wood", emoji: "🚀", tagline: "Bets big on the future, loves a dip" },
+  { id: "diamond_hands", name: "Roaring Kitty", shortName: "Roaring Kitty", emoji: "💎", tagline: "Does his homework, sides with the little guy" },
+  { id: "cassandra", name: "Michael Burry", shortName: "Burry", emoji: "🌧️", tagline: "Asks what could go wrong — before anyone else" },
 ];
 
 const EXAMPLE_QUESTIONS = [
@@ -21,8 +21,16 @@ const VERDICT_STYLE = {
   YES_SMALL: { label: "YES, SMALL", bg: "#fef9c3", fg: "#854d0e", border: "#fde047" },
 };
 
+function normalizeVerdict(verdict) {
+  const v = String(verdict ?? "").toUpperCase();
+  if (v.includes("SMALL")) return "YES_SMALL";
+  if (v.includes("NO")) return "NO";
+  if (v.includes("YES")) return "YES";
+  return verdict;
+}
+
 function VerdictBadge({ verdict, size = 13 }) {
-  const s = VERDICT_STYLE[verdict] ?? { label: verdict, bg: "#f3f4f6", fg: "#374151", border: "#d1d5db" };
+  const s = VERDICT_STYLE[normalizeVerdict(verdict)] ?? { label: verdict, bg: "#f3f4f6", fg: "#374151", border: "#d1d5db" };
   return (
     <span style={{
       background: s.bg, color: s.fg, border: `1px solid ${s.border}`,
@@ -143,10 +151,12 @@ function ModeratorPanel({ mod, onRetry }) {
 
       <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
         {(d.scoreboard ?? []).map((row, i) => {
-          const meta = PERSONAS.find((p) => row.persona?.toLowerCase().includes(p.id.replace("_", " ")) || row.persona?.toLowerCase().replace(/[^a-z]/g, "").includes(p.id.replace("_", ""))) ?? PERSONAS[i];
+          const meta = PERSONAS.find((p) =>
+            String(row.persona ?? "").toLowerCase().replace(/[^a-z]/g, "").includes(p.id.replace("_", ""))
+          ) ?? PERSONAS[i];
           return (
             <div key={i} style={{ display: "flex", alignItems: "baseline", gap: "10px", fontSize: "14px" }}>
-              <span style={{ whiteSpace: "nowrap", fontWeight: 700 }}>{meta?.emoji} {meta?.name ?? row.persona}</span>
+              <span style={{ whiteSpace: "nowrap", fontWeight: 700 }}>{meta?.emoji} {meta?.shortName ?? row.persona}</span>
               <VerdictBadge verdict={row.verdict} size={11} />
               <span style={{ color: "#4b5563" }}>{row.headline_plain}</span>
             </div>
@@ -302,6 +312,10 @@ export default function Home() {
           if (verdicts.length === 4) runModerator(verdicts, modSigRef.current);
         }}
       />
+
+      <footer style={{ fontSize: "12px", color: "#9ca3af", textAlign: "center", marginTop: "8px" }}>
+        Educational personas based on each investor&apos;s public philosophy. Not affiliated. Not financial advice.
+      </footer>
     </main>
   );
 }
