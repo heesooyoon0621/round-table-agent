@@ -325,8 +325,22 @@ export default function Home() {
       setClassifying(false);
     }
     if (route === "followup" && !hasVerdict) route = "new_verdict";
+    console.info("[roundtable route]", route, "—", trimmed);
     if (route === "new_verdict") return startRoundTable(trimmed);
     return askFollowup(trimmed); // followup + out_of_scope (scope honesty lives in the prompt)
+  };
+
+  const verdictSummaryLine = () => {
+    const counts = {};
+    PERSONAS.forEach((p) => {
+      const v = cards[p.id]?.data?.verdict;
+      if (v) counts[v] = (counts[v] ?? 0) + 1;
+    });
+    const tally = ["NO", "YES_SMALL", "YES"]
+      .filter((v) => counts[v])
+      .map((v) => `${counts[v]} ${v === "YES_SMALL" ? "YES,SMALL" : v}`)
+      .join(" / ");
+    return `${mod.data?.final_call_plain ?? ""} — ${tally}`;
   };
 
   const runModerator = async (verdicts, sig) => {
@@ -409,31 +423,55 @@ export default function Home() {
         ))}
       </div>
 
-      {asked && (
-        <div style={{ fontSize: "14px", color: "#374151" }}>
-          You asked: <b>&ldquo;{asked}&rdquo;</b>
-        </div>
-      )}
+      {chat.length === 0 ? (
+        <>
+          {asked && (
+            <div style={{ fontSize: "14px", color: "#374151" }}>
+              You asked: <b>&ldquo;{asked}&rdquo;</b>
+            </div>
+          )}
 
-      <div className="rt-grid">
-        {PERSONAS.map((p) => (
-          <PersonaCard key={p.id} meta={p} state={cards[p.id]} onRetry={() => askPersona(p.id, asked)} />
-        ))}
-      </div>
-
-      <ModeratorPanel
-        mod={mod}
-        onRetry={() => {
-          const verdicts = PERSONAS.map((p) => cards[p.id]?.data).filter(Boolean);
-          if (verdicts.length === 4) runModerator(verdicts, modSigRef.current);
-        }}
-      />
-
-      {chat.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-          <div style={{ fontSize: "12px", letterSpacing: "0.1em", color: "#6b7280", fontWeight: 700 }}>
-            💬 FOLLOW-UP CONVERSATION
+          <div className="rt-grid">
+            {PERSONAS.map((p) => (
+              <PersonaCard key={p.id} meta={p} state={cards[p.id]} onRetry={() => askPersona(p.id, asked)} />
+            ))}
           </div>
+
+          <ModeratorPanel
+            mod={mod}
+            onRetry={() => {
+              const verdicts = PERSONAS.map((p) => cards[p.id]?.data).filter(Boolean);
+              if (verdicts.length === 4) runModerator(verdicts, modSigRef.current);
+            }}
+          />
+        </>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {/* Thread anchor: original question + collapsed verdict summary */}
+          <div style={{ alignSelf: "flex-end", maxWidth: "85%", padding: "10px 14px", borderRadius: "14px 14px 4px 14px", background: "#111827", color: "#fff", fontSize: "14px", lineHeight: 1.55 }}>
+            {asked}
+          </div>
+          <details style={{ border: "1px solid #d1d5db", borderRadius: "12px", padding: "10px 14px", background: "#fafafa" }}>
+            <summary style={{ cursor: "pointer", fontSize: "13px", fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              🏛️ Verdict: {verdictSummaryLine()}
+            </summary>
+            <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "12px" }}>
+              <div className="rt-grid">
+                {PERSONAS.map((p) => (
+                  <PersonaCard key={p.id} meta={p} state={cards[p.id]} onRetry={() => askPersona(p.id, asked)} />
+                ))}
+              </div>
+              <ModeratorPanel
+                mod={mod}
+                onRetry={() => {
+                  const verdicts = PERSONAS.map((p) => cards[p.id]?.data).filter(Boolean);
+                  if (verdicts.length === 4) runModerator(verdicts, modSigRef.current);
+                }}
+              />
+            </div>
+          </details>
+
+          {/* Follow-up exchanges */}
           {chat.map((m, i) => (
             <div
               key={i}
