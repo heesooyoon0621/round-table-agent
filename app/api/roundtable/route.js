@@ -6,6 +6,7 @@ import {
   moderatorUserMessage,
   callFireworks,
 } from "../../../lib/roundtable";
+import { runCalc } from "../../../lib/calc";
 
 const PERSONA_REQUIRED = [
   "persona", "verdict", "confidence", "headline_plain", "analogy_plain",
@@ -31,9 +32,10 @@ export async function POST(req) {
       if (!question?.trim()) {
         return Response.json({ error: "question is required" }, { status: 400 });
       }
+      const { calc, source: calcSource } = await runCalc(personaId);
       const result = await callFireworks({
         system: personaSystemPrompt(personaId),
-        user: personaUserMessage(personaId, question.trim()),
+        user: personaUserMessage(personaId, question.trim(), calc),
         temperature: 0.6,
       });
       const missing = PERSONA_REQUIRED.filter((k) => !(k in result));
@@ -43,7 +45,7 @@ export async function POST(req) {
           { status: 502 }
         );
       }
-      return Response.json({ result });
+      return Response.json({ result, calc, calcSource });
     }
 
     if (body.type === "moderator") {

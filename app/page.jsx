@@ -42,6 +42,25 @@ function VerdictBadge({ verdict, size = 13 }) {
   );
 }
 
+function LoadingLine() {
+  const [phase, setPhase] = useState(0);
+  useEffect(() => {
+    const t = setTimeout(() => setPhase(1), 7000);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div style={{ color: "#6b7280", fontSize: "13px" }} className="rt-pulse">
+      {phase === 0 ? "🧮 Running the numbers in a live sandbox…" : "💭 Thinking hard about your question…"}
+    </div>
+  );
+}
+
+const CALC_SOURCE_LABEL = {
+  "daytona-sandbox": "🧮 Numbers computed live in a Daytona sandbox",
+  "local-fallback": "🖥️ Numbers computed on the server (sandbox fallback)",
+  "static-demo-data": "📦 Numbers from cached demo data",
+};
+
 function PersonaCard({ meta, state, onRetry }) {
   const base = {
     border: "1px solid #e5e7eb", borderRadius: "14px", padding: "16px",
@@ -64,11 +83,7 @@ function PersonaCard({ meta, state, onRetry }) {
         <div style={{ color: "#9ca3af", fontSize: "13px" }}>Waiting for a question…</div>
       )}
 
-      {state?.status === "loading" && (
-        <div style={{ color: "#6b7280", fontSize: "13px" }} className="rt-pulse">
-          Thinking hard about your question…
-        </div>
-      )}
+      {state?.status === "loading" && <LoadingLine />}
 
       {state?.status === "error" && (
         <div style={{ fontSize: "13px" }}>
@@ -92,6 +107,11 @@ function PersonaCard({ meta, state, onRetry }) {
           <div style={{ fontSize: "12px", color: "#6b7280" }}>
             Confidence: {state.data.confidence}/100
           </div>
+          {state.calcSource && (
+            <div style={{ fontSize: "11px", color: "#9ca3af" }}>
+              {CALC_SOURCE_LABEL[state.calcSource] ?? state.calcSource}
+            </div>
+          )}
           <details>
             <summary style={{ cursor: "pointer", fontSize: "13px", color: "#2563eb", fontWeight: 600 }}>
               Hear the full story
@@ -203,7 +223,7 @@ export default function Home() {
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "HTTP " + r.status);
-      setCards((c) => ({ ...c, [personaId]: { status: "done", data: j.result } }));
+      setCards((c) => ({ ...c, [personaId]: { status: "done", data: j.result, calc: j.calc, calcSource: j.calcSource } }));
     } catch (e) {
       setCards((c) => ({ ...c, [personaId]: { status: "error", error: e.message } }));
     }
