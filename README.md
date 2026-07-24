@@ -6,48 +6,71 @@
 
 I work in finance, and my parents still ask me "so… what should I buy?" What they actually need isn't a stock tip — it's the experience of watching the best investors in the world think about their question, in words a 70-year-old can fully understand. The Round Table gives them that: four investing philosophies argue it out, and a moderator translates the verdict into plain English, real dollar amounts, and one honest comparison with a savings account.
 
-## How It Works
+## What It Does
 
-Ask anything — *"Tesla keeps dropping — is it okay to buy now?"* — and:
+Four personas — **Warren Buffett, Cathie Wood, Roaring Kitty, and Michael Burry** (educational personas based on each investor's public philosophy) — each judge your question through their own framework and must land on `YES`, `NO`, or `YES_SMALL`. No hedging allowed.
 
-1. **Real math first.** Each persona's own Python script runs in a **Daytona sandbox** (P/E premium vs history, 5-year scenario multiples, squeeze/value-floor score, crash-scenario dollar damage).
-2. **Four verdicts.** Fireworks AI renders four personas — styled after **Warren Buffett, Cathie Wood, Roaring Kitty, and Michael Burry** — each forced to end with `YES`, `NO`, or `YES_SMALL` plus a confidence score. No hedging allowed.
-3. **The family verdict.** A Moderator counts the votes and produces the final screen: one big plain-English call, the scoreboard, a **$10,000 worst/best scenario**, the guaranteed savings-account alternative (~4%), when to ask again, and a safety note.
+Every verdict is grounded in **sandbox-computed math**: each persona's numbers come from its own Python script run on real market data, never from the model's imagination. Tickers outside the demo cache get an honest *"today's demo has live data for Tesla only"* — no fabricated numbers, ever.
+
+The **Family Verdict** translates it all into plain English: one big call, a scoreboard, what happens to $10,000 in the worst and best case, the guaranteed savings-account alternative, when to ask again, a safety note, and a one-tap **"Share with family"** message.
+
+Then the conversation continues, with smart routing:
+- **Explanatory** — *"Why did Buffett say no?"* → one contextual answer from the moderator, grounded in the panel's actual numbers.
+- **Scenario change** — *"What if it drops another 20%?"* → the sandbox recomputes every number at the new price, the table re-convenes, and a compact diff shows exactly who flips (at −20%, Cathie Wood flips YES_SMALL → YES ✨).
+- **Out of scope** — *"Is Apple a better buy?"* → an honest no-data reply plus a short explanation of how the table would approach it.
+
+**Safety auto-NO triggers** override every persona, including the optimist: borrowed money, all-in bets, retirement funds at risk, guaranteed-return schemes, crowd pressure ("everyone is buying!"), and decision delegation ("just decide for me").
+
+## Architecture
 
 ```mermaid
 flowchart TD
-    Q["Question (plain language)"] --> API["/api/roundtable"]
-    API --> D["Daytona sandbox<br/>calcs/*_calc.py<br/>(10s timeout → local Python → static data)"]
-    D --> B["🦉 Buffett<br/>value gates"]
-    D --> W["🚀 Wood<br/>5yr scenarios"]
-    D --> K["💎 Roaring Kitty<br/>squeeze + value floor"]
-    D --> Y["🌧️ Burry<br/>P/E reversion damage"]
-    B & W & K & Y --> M["🎙️ Moderator<br/>final call + $10,000 scenario<br/>+ savings comparison"]
-    M --> UI["Verdict screen<br/>(4 cards + family verdict)"]
+    Q["Question"] --> C["Classifier (Fireworks)"]
+    C -->|new verdict / scenario| D["Daytona sandbox<br/>calcs/*_calc.py per persona<br/>(10s timeout → local Python → static data)"]
+    C -->|explanatory follow-up| F["Moderator follow-up call<br/>(full verdict context)"]
+    C -->|out of scope| F
+    D --> P1["🦉 Buffett"] & P2["🚀 Wood"] & P3["💎 Roaring Kitty"] & P4["🌧️ Burry"]
+    P1 & P2 & P3 & P4 --> M["🎙️ Moderator"]
+    M --> UI["Verdict screen / thread UI (React)"]
+    F --> UI
 ```
 
-All prompts live in **`persona_prompts.md`** — the file is parsed at runtime, so editing it changes the app. Demo market data lives in `tsla_demo_data.json` (TSLA, updated through the 2026-07-24 close).
+The four persona calls run in parallel on Fireworks; scenario follow-ups rebuild the input data (price, market cap, P/E, FCF yield, price-to-book rescaled) and re-run the whole pipeline. Every question becomes one Braintrust trace. If Daytona is unreachable or slow (>10s), calcs fall back to local Python, then to cached static data — the demo never blocks.
+
+All prompts live in [`persona_prompts.md`](persona_prompts.md), parsed at runtime — editing that file changes the app.
 
 ## Sponsor Tools
 
-| Tool | What we use it for |
-|---|---|
-| **Fireworks AI** | All model inference. Round Table personas + Moderator run on `glm-5p2` (chosen over `kimi-k2p6` / `gpt-oss-120b` after a JSON-compliance & latency shootout). The CopilotKit chat endpoint (`/api/copilotkit`) runs `kimi-k2p6`. |
-| **Daytona** | Every persona's `[CALC_RESULTS]` is computed by a real Python run in a sandbox (`lib/calc.js` — one sandbox created and reused across requests, ~0.7s per run). Cards display the compute source live. |
-| **Braintrust** | Tracing: one question = one trace tree (`roundtable → persona:* → calc + llm → moderator`) in project `round-table-agent`. Evals: 30-case suite (`eval/run_eval.mjs`, experiment `roundtable-v1-30cases-f3036486`) — JSON validity 30/30, money translation 30/30, safety gate 8/10, plus an LLM parent-comprehensibility judge. |
-| **CopilotKit** | Chat UI + runtime used for the first milestone (plain-language Q&A); the runtime endpoint is still live at `/api/copilotkit`. The Round Table verdict screen is custom React on top of the same Fireworks backend. |
+**Fireworks AI** powers all agent inference: the 4 personas, the moderator, the follow-up answerer, and the question classifier — about 5–6 calls per verdict, fanned out in parallel, all with strict JSON outputs (`glm-5p2` for the table after a JSON-compliance/latency shootout against `kimi-k2p6` and `gpt-oss-120b`; `kimi-k2p6` on the legacy chat endpoint).
 
-## Safety by Design
+**Daytona** runs each persona's financial math as Python in an isolated sandbox: ~175ms to create, ~0.7s per execution, one sandbox reused across requests. We verified number-grounding end to end — the dollars quoted on the cards match the script outputs exactly (e.g. Burry's "$4,121, a loss of $5,879"). Scenario follow-ups re-run the same scripts on modified inputs.
 
-- **Automatic NO triggers** — regardless of persona philosophy, the verdict is forced to NO when a question involves: betting everything on one stock, borrowed money (loans/margin/leverage), retirement savings at risk, or paid stock-picking rooms / "guaranteed return" schemes.
-- **No impersonation** — personas are educational characters based on each investor's *public* philosophy. First-person impersonation ("I am Warren Buffett") is forbidden in the prompts; third-person references ("As Buffett puts it…") are allowed. Real names appear only as UI labels.
-- **Plain language is the product** — no untranslated jargon in any `*_plain` field (say "the price tag compared to what the company actually earns", not "P/E"); every percentage must become real dollars on a $10,000 baseline; one everyday analogy per answer; short sentences; never condescending.
-- **Never "buy"** — the strongest positive allowed is "worth a closer look — only with money you can spare." The final decision is always returned to the family.
-- **Verified by evals** — the 30-case Braintrust suite checks JSON schema compliance, the safety gate on 10 trap questions (retirement all-in, borrowed money, guaranteed 10%/month, leverage…), dollar-translation presence, and comprehensibility for a finance-novice reader.
+**Braintrust** traces every question as one 14-span tree (`roundtable → persona:* → calc + llm → moderator`) and hosts our 30-case eval with 4 scorers. The eval caught two real safety gaps (crowd pressure, decision delegation): after prompt fixes, the safety gate went **8/10 → 10/10** and parent-comprehensibility **0.49 → 0.93**. A follow-up audit of the two remaining zeros showed both were LLM-judge false negatives, not product failures.
+
+**CopilotKit** (`@copilotkit/react-core`, `react-ui`, `runtime`) powered the project's first milestone — the plain-English chat interface — using `CopilotKit` + `CopilotChat` components against a `CopilotRuntime`/`OpenAIAdapter` endpoint wired to Fireworks with a server-injected plain-language system prompt. That runtime endpoint is still live at `/api/copilotkit`; the current verdict-thread UI is custom React on the same backend.
+
+## Eval & Safety
+
+30 cases across five categories (core verdicts, parent-voice questions, safety traps, persona fidelity, edge cases), scored on JSON validity, the safety gate, parent comprehensibility (LLM judge), and dollar-translation presence:
+
+| Scorer | v1 | v2 (after prompt fixes) |
+|---|---|---|
+| JSON validity | 1.00 (30/30) | 1.00 (30/30) |
+| Safety gate (10 trap cases) | 0.80 (8/10) | **1.00 (10/10)** |
+| Parent comprehensibility | 0.49 | **0.93** |
+| Money translation | 1.00 (30/30) | 1.00 (30/30) |
+
+What the eval caught: Cathie Wood's persona answered `YES_SMALL` to pure crowd-pressure and decide-for-me questions — both are now explicit auto-NO triggers. The two remaining comprehensibility zeros were audited by hand: the judge returned "not understandable" with an *empty* jargon list on answers whose action was literally "please don't buy" — judge false negatives, documented and left as-is.
+
+Run it yourself (**costs real Fireworks credits** — ~180 model calls — so it refuses to run without the flag):
+
+```bash
+node eval/run_eval.mjs --yes-spend-credits
+```
 
 ## Getting Started
 
-Prereqs: **Node 18.17+** (we develop on Node 24) and optionally **Python 3** (only needed for the local calc fallback when Daytona is off/unreachable).
+Prereqs: **Node 18.17+** and optionally **Python 3** (only for the local calc fallback when Daytona is off).
 
 ```bash
 git clone https://github.com/heesooyoon0621/round-table-agent.git
@@ -55,7 +78,7 @@ cd round-table-agent
 npm install
 ```
 
-Create a `.env` file in the project root (values from your own accounts):
+Create `.env` in the project root:
 
 ```
 FIREWORKS_API_KEY=   # required — all model calls
@@ -65,37 +88,16 @@ BRAINTRUST_API_KEY=  # optional — tracing (skipped silently without it)
 
 Optional: `USE_DAYTONA=false` forces the local-Python calc path.
 
-Run it:
-
 ```bash
 npm run dev
 ```
 
-Open **http://localhost:3000** and click one of the example questions. First page load compiles for ~30s; each verdict takes ~20-40s (four parallel model calls + moderator).
+Open **http://localhost:3000** and click an example question. First compile takes ~30s; each verdict takes ~20–40s (parallel model calls + moderator).
 
-Run the eval suite (writes results to Braintrust and `eval/last_run_rows.json`).
-**Costs real Fireworks credits** (~180 model calls), so it refuses to run without the flag:
+## Data Note
 
-```bash
-node eval/run_eval.mjs --yes-spend-credits
-```
-
-### Repo map
-
-```
-app/page.jsx               # Round Table UI: 4 persona cards + family verdict
-app/api/roundtable/        # persona + moderator endpoint (with Braintrust spans)
-app/api/copilotkit/        # CopilotKit chat runtime (Fireworks kimi-k2p6)
-lib/roundtable.js          # prompt parsing, Fireworks calls, defensive JSON parsing
-lib/calc.js                # Daytona sandbox runner + fallback chain
-lib/trace.js               # Braintrust tracing (one tree per question)
-calcs/*_calc.py            # per-persona Python calculations
-persona_prompts.md         # THE source of truth for all prompts
-tsla_demo_data.json        # raw demo market data (TSLA)
-braintrust_eval_questions.json  # 30 eval cases (EN + KO)
-eval/run_eval.mjs          # Braintrust eval harness (S1/S2/S3/S5)
-```
+The demo runs on cached TSLA market data compiled **as of 2026-07-24** (`tsla_demo_data.json`). Scenario follow-ups derive their numbers from this cache; a standalone Yahoo Finance fetcher (`calcs/live_market_data.py`) is included for refreshing it.
 
 ---
 
-*Educational personas based on public investment philosophies. Not affiliated. Not financial advice.*
+*Educational personas based on each investor's public philosophy. Not affiliated. Not financial advice.*
