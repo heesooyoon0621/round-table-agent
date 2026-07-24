@@ -218,17 +218,74 @@ function ModeratorPanel({ mod, onRetry }) {
   );
 }
 
-function ScenarioBlock({ sc }) {
+// Compact scenario diff: one line per persona ("old -> new" verdicts),
+// flips highlighted; the full cards live behind an expand toggle.
+function ScenarioBlock({ sc, baseline }) {
   if (!sc) return null;
   return (
-    <div style={{ border: "2px dashed #9ca3af", borderRadius: "16px", padding: "16px", display: "flex", flexDirection: "column", gap: "14px", background: "#fcfcfd" }}>
-      <div style={{ fontWeight: 800, fontSize: "16px" }}>{sc.label}</div>
-      <div className="rt-grid">
-        {PERSONAS.map((p) => (
-          <PersonaCard key={p.id} meta={p} state={sc.cards[p.id]} onRetry={null} />
-        ))}
-      </div>
-      <ModeratorPanel mod={sc.mod} onRetry={null} />
+    <div style={{ border: "2px dashed #9ca3af", borderRadius: "16px", padding: "14px 16px", display: "flex", flexDirection: "column", gap: "8px", background: "#fcfcfd" }}>
+      <div style={{ fontWeight: 800, fontSize: "15px" }}>{sc.label}</div>
+
+      {PERSONAS.map((p) => {
+        const st = sc.cards[p.id];
+        const oldV = baseline?.[p.id];
+        const newV = st?.status === "done" ? st.data.verdict : null;
+        const flipped = oldV && newV && normalizeVerdict(oldV) !== normalizeVerdict(newV);
+        return (
+          <div
+            key={p.id}
+            style={{
+              display: "flex", alignItems: "center", gap: "8px", fontSize: "13px",
+              padding: "4px 8px", borderRadius: "8px", minWidth: 0,
+              background: flipped ? "#fef3c7" : "transparent",
+              border: flipped ? "1px solid #fcd34d" : "1px solid transparent",
+            }}
+          >
+            <span style={{ whiteSpace: "nowrap", fontWeight: 700 }}>{p.emoji} {p.shortName}:</span>
+            {oldV && <VerdictBadge verdict={oldV} size={10} />}
+            <span style={{ color: "#9ca3af" }}>→</span>
+            {st?.status === "error" ? (
+              <span style={{ color: "#991b1b" }}>failed</span>
+            ) : newV ? (
+              <VerdictBadge verdict={newV} size={10} />
+            ) : (
+              <span className="rt-pulse" style={{ color: "#9ca3af" }}>…</span>
+            )}
+            {flipped && <span title="verdict flipped">✨</span>}
+            {newV && (
+              <span style={{ flex: 1, minWidth: 0, color: "#4b5563", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                — {st.data.headline_plain}
+              </span>
+            )}
+          </div>
+        );
+      })}
+
+      {sc.mod?.status === "done" && (
+        <div style={{ fontSize: "13px", fontWeight: 700, marginTop: "2px" }}>
+          🎙️ {sc.mod.data.final_call_plain}
+        </div>
+      )}
+      {sc.mod?.status === "loading" && (
+        <div className="rt-pulse" style={{ fontSize: "12px", color: "#6b7280" }}>🎙️ Writing the scenario verdict…</div>
+      )}
+      {sc.mod?.status === "error" && (
+        <div style={{ fontSize: "12px", color: "#991b1b" }}>🎙️ Scenario verdict failed ({sc.mod.error})</div>
+      )}
+
+      <details>
+        <summary style={{ cursor: "pointer", fontSize: "12px", color: "#2563eb", fontWeight: 600 }}>
+          Show the full scenario cards
+        </summary>
+        <div style={{ display: "flex", flexDirection: "column", gap: "14px", marginTop: "10px" }}>
+          <div className="rt-grid">
+            {PERSONAS.map((p) => (
+              <PersonaCard key={p.id} meta={p} state={sc.cards[p.id]} onRetry={null} />
+            ))}
+          </div>
+          <ModeratorPanel mod={sc.mod} onRetry={null} />
+        </div>
+      </details>
     </div>
   );
 }
@@ -558,7 +615,11 @@ export default function Home() {
 
           {/* Follow-up exchanges */}
           {chat.map((m, i) => m.role === "scenario" ? (
-            <ScenarioBlock key={m.id} sc={scenarios[m.id]} />
+            <ScenarioBlock
+              key={m.id}
+              sc={scenarios[m.id]}
+              baseline={Object.fromEntries(PERSONAS.map((p) => [p.id, cards[p.id]?.data?.verdict]))}
+            />
           ) : (
             <div
               key={i}
