@@ -154,7 +154,8 @@ ${JSON.stringify(material, null, 2)}
 Answer honestly:
 1) Can you tell WHAT it means?
 2) Do you know WHAT TO DO next (including "wait" as a valid action)?
-3) List any financial jargon left untranslated (e.g. P/E, valuation, market cap, margin, FCF, drawdown, volatility, leverage used without a plain-word explanation).
+3) List ONLY terms from this exact list that appear WITHOUT a plain-word explanation right next to them: P/E, price-to-earnings, valuation, multiple, market cap, margin, FCF, free cash flow, drawdown, volatility, leverage, short interest, price-to-book, book value, EPS, CAGR, TAM.
+   Do NOT list everyday words (earnings, robotaxi, robot, savings account, stock, shares, price tag) and do NOT list a term if the sentence explains it in plain words.
 
 Reply as JSON: {"understandable": 0 | 0.5 | 1, "knows_what_to_do": true|false, "jargon": ["..."]}
 Score understandable=1 only if BOTH (1) and (2) are yes. Deduct for jargon separately via the list.`;
@@ -189,7 +190,7 @@ const data = dataset.cases.map((c) => ({
 // ---- run ----
 const rows = [];
 const result = await Eval("round-table-agent", {
-  experimentName: "roundtable-v1-30cases",
+  experimentName: "roundtable-v2-30cases",
   data,
   task: async (input, hooks) => {
     const out = await task(input);
