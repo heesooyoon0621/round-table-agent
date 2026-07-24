@@ -55,7 +55,10 @@ const injectSystemPrompt = async (url, init = {}) => {
 };
 
 const openai = new OpenAI({
-  apiKey: process.env.FIREWORKS_API_KEY,
+  // Sites injects secrets at runtime, not while Next.js collects route data.
+  // A non-secret placeholder lets the build finish; live requests still use
+  // the configured Fireworks key in production.
+  apiKey: process.env.FIREWORKS_API_KEY || "runtime-fireworks-key",
   baseURL: "https://api.fireworks.ai/inference/v1",
   fetch: injectSystemPrompt,
 });
