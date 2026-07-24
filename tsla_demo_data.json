@@ -28,7 +28,7 @@
       "Robotaxi/Optimus = huge spending today, no meaningful revenue yet (dedicated robotaxi fleet not expected until 2027+)",
       "Analysts cut price targets after the miss; CFO guided capex to stay above $25B and grow for 2-3 more years"
     ],
-    "parent_translation_ko": "장사(매출)는 역대급으로 잘했는데, 번 돈보다 로봇·자율주행에 쓰는 돈이 훨씬 많아져서 이번 분기 남는 돈이 마이너스가 됐어요. 그래서 하루 만에 13% 넘게 떨어졌어요."
+    "parent_translation_plain": "The store did record business — more cars sold than ever. But the company is spending far more on robots and self-driving than it earns, so this quarter it ended up with less money than it started with. That is why the price fell more than 13% in one day — if you had $10,000 in it, it became about $8,650 overnight."
   },
 
   "oracle_inputs": {
@@ -43,8 +43,8 @@
     "fcf_ttm_usd_billion": 7.0,
     "fcf_latest_quarter": "NEGATIVE (Q2 2026)",
     "fcf_yield_pct_ttm": 0.5,
-    "kr_savings_rate_pct": 3.0,
-    "kr_savings_note": "국내 1년 정기예금 대략치. 데모 전날 최신 금리로 갱신할 것"
+    "savings_rate_pct": 4.0,
+    "savings_note": "TODO: rough 1-yr US savings account / CD rate — update to the latest real rate on demo morning"
   },
 
   "moonshot_inputs": {
@@ -87,16 +87,17 @@
   },
 
   "moderator_inputs": {
-    "krw_scenario_base_10m": {
-      "deposit_1yr_at_3pct": "1,000만원 -> 약 1,030만원 (확정)",
-      "tsla_worst_case_moderate": "1,000만원 -> 약 610만원 (P/E 200 회귀 시 -39%)",
-      "tsla_worst_case_severe": "1,000만원 -> 약 410만원 (역사적 밸류에이션 회귀 시 -59%)",
-      "tsla_bull_case_5yr": "1,000만원 -> 약 3,300만원 (Moonshot 강세 시나리오, 가정에 크게 의존)"
+    "usd_scenario_base_10k": {
+      "_note": "TODO: savings rate assumed ~4%/yr — update to the latest real rate on demo morning",
+      "savings_1yr_at_4pct": "$10,000 -> about $10,400 (guaranteed)",
+      "tsla_worst_case_moderate": "$10,000 -> about $6,100 (-39%, if the price tag falls back to a calmer level)",
+      "tsla_worst_case_severe": "$10,000 -> about $4,100 (-59%, if the price tag falls back to its own 5-year average)",
+      "tsla_bull_case_5yr": "$10,000 -> about $33,000 (Moonshot's sunniest 5-year scenario — depends heavily on assumptions)"
     },
     "revisit_triggers_examples": [
-      "자동차 마진이 다시 안정되었다는 다음 분기 실적",
-      "로보택시 유료 주행거리가 감소세에서 증가세로 전환",
-      "주가가 forward P/E 기준 100배 아래로 내려올 때 (대략 $250 근처)"
+      "Next quarter's results show the company is keeping more of each dollar from every car it sells",
+      "Paid robotaxi rides stop shrinking and start growing again",
+      "The share price drops to where you pay less than 100x next year's expected earnings (roughly near $250)"
     ]
   }
 }
