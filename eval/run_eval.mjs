@@ -7,6 +7,15 @@ import path from "path";
 import { execFile } from "child_process";
 import { fileURLToPath } from "url";
 
+// Cost guard: a full run makes ~180 Fireworks calls. Require an explicit flag.
+if (!process.argv.includes("--yes-spend-credits")) {
+  console.error(
+    "Refusing to run: a full eval burns ~180 Fireworks calls.\n" +
+    "If you really mean it, run:  node eval/run_eval.mjs --yes-spend-credits"
+  );
+  process.exit(1);
+}
+
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 // ---- env ----

@@ -73,10 +73,11 @@ npm run dev
 
 Open **http://localhost:3000** and click one of the example questions. First page load compiles for ~30s; each verdict takes ~20-40s (four parallel model calls + moderator).
 
-Run the eval suite (writes results to Braintrust and `eval/last_run_rows.json`):
+Run the eval suite (writes results to Braintrust and `eval/last_run_rows.json`).
+**Costs real Fireworks credits** (~180 model calls), so it refuses to run without the flag:
 
 ```bash
-node eval/run_eval.mjs
+node eval/run_eval.mjs --yes-spend-credits
 ```
 
 ### Repo map
