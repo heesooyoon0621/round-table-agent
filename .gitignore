@@ -1,0 +1,27 @@
+# 환경 변수 / API 키 — 절대 커밋 금지
+.env
+.env.*
+*.env
+*.key
+*.pem
+credentials*.json
+secrets*
+
+# Node
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS / 편집기
+.DS_Store
+Thumbs.db
+desktop.ini
+~$*
+*.tmp
+
+# Claude 로컬 설정
+.claude/settings.local.json
