@@ -212,6 +212,7 @@ export default function Home() {
   const [cards, setCards] = useState({});
   const [mod, setMod] = useState({ status: "idle" });
   const modSigRef = useRef(null);
+  const questionIdRef = useRef(null);
 
   const askPersona = async (personaId, q) => {
     setCards((c) => ({ ...c, [personaId]: { status: "loading" } }));
@@ -219,7 +220,7 @@ export default function Home() {
       const r = await fetch("/api/roundtable", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "persona", personaId, question: q }),
+        body: JSON.stringify({ type: "persona", personaId, question: q, questionId: questionIdRef.current }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "HTTP " + r.status);
@@ -236,6 +237,7 @@ export default function Home() {
     setQuestion(trimmed);
     setMod({ status: "idle" });
     modSigRef.current = null;
+    questionIdRef.current = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random());
     PERSONAS.forEach((p) => askPersona(p.id, trimmed));
   };
 
@@ -245,7 +247,7 @@ export default function Home() {
       const r = await fetch("/api/roundtable", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "moderator", question: asked, verdicts }),
+        body: JSON.stringify({ type: "moderator", question: asked, verdicts, questionId: questionIdRef.current }),
       });
       const j = await r.json();
       if (!r.ok) throw new Error(j.error ?? "HTTP " + r.status);

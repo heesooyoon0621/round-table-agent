@@ -28,3 +28,6 @@ desktop.ini
 
 # Claude 로컬 설정
 .claude/settings.local.json
+
+# Eval run artifacts
+eval/last_run_*.json
