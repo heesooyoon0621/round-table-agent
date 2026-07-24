@@ -26,7 +26,7 @@ flowchart TD
     M --> UI["Verdict screen<br/>(4 cards + family verdict)"]
 ```
 
-All prompts live in **`persona_prompts.md`** — the file is parsed at runtime, so editing it changes the app. Demo market data lives in `tsla_demo_data.json` (TSLA, compiled 2026-07-23).
+All prompts live in **`persona_prompts.md`** — the file is parsed at runtime, so editing it changes the app. Demo market data lives in `tsla_demo_data.json` (TSLA, updated through the 2026-07-24 close).
 
 ## Sponsor Tools
 

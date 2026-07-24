@@ -2,102 +2,131 @@
   "_meta": {
     "ticker": "TSLA",
     "company": "Tesla, Inc.",
-    "as_of": "2026-07-23",
-    "note": "Daytona HackSprint demo cache. All figures compiled from public market data on 2026-07-23 (post Q2 earnings crash). Verify price/PE on demo morning — they move daily.",
-    "sources": "stockanalysis.com, Robinhood, fullratio.com, Yahoo Finance / StockStory, Motley Fool (2026-07-22~23)"
+    "as_of": "2026-07-24",
+    "note": "Daytona HackSprint demo cache. Market figures are updated through the July 24, 2026 close; operating figures use Tesla's Q2 2026 shareholder update and 10-Q.",
+    "sources": "Tesla Investor Relations Q2 2026 update and Form 10-Q; Nasdaq/StockAnalysis; Yahoo Finance; ADVFN (accessed 2026-07-24)"
   },
-
   "market_snapshot": {
-    "price_usd": 323.55,
-    "price_note": "intraday 2026-07-23, after -13~14% post-earnings drop",
-    "market_cap_usd_trillion": 1.2,
+    "price_usd": 313.03,
+    "price_note": "2026-07-24 regular-session close; -2.08% on the day after the 2026-07-23 post-earnings selloff",
+    "market_cap_usd_trillion": 1.236,
     "week52_high": 498.83,
     "week52_low": 297.82,
-    "drop_from_52wk_high_pct": -35.1,
-    "ytd_change_pct": -17,
+    "drop_from_52wk_high_pct": -37.25,
+    "ytd_change_pct": -17.85,
     "beta": 1.8
   },
-
   "why_it_fell_context": {
-    "one_day_drop_pct": -13.5,
-    "trigger": "2026-07-22 Q2 earnings: non-GAAP EPS $0.33 vs Wall St expectation $0.54 (big miss). Quarterly free cash flow turned NEGATIVE due to surging AI/robotics/robotaxi capex.",
-    "but_also_true": "Revenue $28.24B, +25.5% YoY (beat). Q2 deliveries 480,126, +25% YoY, an 18% beat vs consensus.",
+    "one_day_drop_pct": -2.08,
+    "trigger": "The July 24 decline extended the post-earnings selloff. Tesla's July 22 Q2 report showed adjusted EPS of $0.33 versus roughly $0.50-$0.54 expected, while quarterly free cash flow turned negative as AI, robotics and manufacturing capex accelerated.",
+    "but_also_true": "Q2 revenue was $28.236B, +25.5% YoY, and Q2 deliveries reached a record 480,126, +25% YoY. GAAP diluted EPS was $0.32 and adjusted EPS was $0.33.",
     "structural_worries": [
-      "BYD retook global EV #1; Tesla US EV share fell from ~80% (2019) to ~44% (2025)",
-      "Volume growth achieved partly via price cuts -> auto margins compressing",
-      "Robotaxi/Optimus = huge spending today, no meaningful revenue yet (dedicated robotaxi fleet not expected until 2027+)",
-      "Analysts cut price targets after the miss; CFO guided capex to stay above $25B and grow for 2-3 more years"
+      "BYD remained the global EV volume leader; Tesla's competitive position depends increasingly on autonomy, energy and robotics",
+      "Operating margin fell to 1.4% from 4.1% a year earlier as operating expenses and AI investment increased",
+      "Robotaxi and Optimus require heavy spending today while their long-term revenue remains uncertain",
+      "Tesla expects 2026 capital expenditures above $25B, driven by AI compute, data centers, manufacturing and company-operated AI-enabled assets"
     ],
-    "parent_translation_plain": "The store did record business — more cars sold than ever. But the company is spending far more on robots and self-driving than it earns, so this quarter it ended up with less money than it started with. That is why the price fell more than 13% in one day — if you had $10,000 in it, it became about $8,650 overnight."
+    "parent_translation_plain": "Tesla delivered more cars than ever and revenue grew strongly, but profit per share missed expectations and heavy investment pushed quarterly free cash flow below zero. The stock fell 14.52% on July 23 and another 2.08% on July 24: $10,000 held through both sessions would have become about $8,375."
   },
-
   "oracle_inputs": {
-    "pe_current": 330,
-    "pe_note": "trailing PE ~364 pre-crash (7/22) -> ~330 post -13.5% drop; forward PE ~165",
+    "pe_current": 290,
+    "pe_note": "Approximately 290x trailing earnings at the 2026-07-24 close, using roughly $1.08 TTM diluted EPS; forward estimates vary by provider",
     "pe_3yr_avg": 158,
     "pe_5yr_avg": 136,
     "pe_7yr_avg": 235,
-    "roe_by_year": { "2022": 33.5, "2023": 27.8, "2024": 10.4, "2025": 6.5, "ttm_2026": 4.9 },
-    "roe_note": "2023 figure inflated by one-time tax benefit; trend is sharply declining",
+    "roe_by_year": {
+      "2022": 33.5,
+      "2023": 27.8,
+      "2024": 10.4,
+      "2025": 6.5,
+      "ttm_2026": 4.9
+    },
+    "roe_note": "2023 included a one-time tax benefit; the multi-year trend remains sharply lower",
     "debt_to_equity": 0.19,
-    "fcf_ttm_usd_billion": 7.0,
-    "fcf_latest_quarter": "NEGATIVE (Q2 2026)",
-    "fcf_yield_pct_ttm": 0.5,
+    "fcf_ttm_usd_billion": 4.96,
+    "fcf_latest_quarter": "-$1.09B (Q2 2026; operating cash flow less $5.79B capex)",
+    "fcf_yield_pct_ttm": 0.4,
     "savings_rate_pct": 4.0,
-    "savings_note": "TODO: rough 1-yr US savings account / CD rate — update to the latest real rate on demo morning"
+    "savings_note": "Demo comparison assumption: 4.0% APY for a competitive insured 1-year savings/CD product; actual offers vary"
   },
-
   "moonshot_inputs": {
-    "revenue_ttm_usd_billion": 105,
+    "revenue_ttm_usd_billion": 103.61,
     "revenue_growth_latest_q_yoy_pct": 25.5,
-    "revenue_growth_note": "2023-2025 growth was nearly flat (~$97B plateau); 2026 reaccelerated to +25% on volume/energy",
+    "revenue_growth_note": "Q2 2026 revenue was $28.236B, up 25.5% YoY; first-half 2026 revenue was $50.623B, up 21.0% YoY",
     "deliveries_q2_2026": 480126,
     "deliveries_growth_yoy_pct": 25,
-    "fsd_catalyst": "FSD v14 Lite rollout (June 2026) reached older Hardware 3 cars; robotaxi network live but paid miles DECLINED q/q in Q2",
+    "fsd_catalyst": "Autonomy, Robotaxi and Optimus remain the central upside case, but commercialization timing and economics are still uncertain",
     "tam_scenarios_5yr": {
       "_note": "These are DEMO ASSUMPTIONS (Moonshot's framework), not market data",
-      "bull": { "narrative": "robotaxi+Optimus commercialize by 2029", "implied_market_cap_usd_trillion": 4.0, "multiple_vs_today": 3.3 },
-      "base": { "narrative": "EV+energy grow, autonomy partial", "implied_market_cap_usd_trillion": 2.0, "multiple_vs_today": 1.7 },
-      "bear": { "narrative": "auto margins stay compressed, autonomy delayed past 2028", "implied_market_cap_usd_trillion": 0.9, "multiple_vs_today": 0.75 }
+      "bull": {
+        "narrative": "robotaxi+Optimus commercialize by 2029",
+        "implied_market_cap_usd_trillion": 4.0,
+        "multiple_vs_today": 3.24
+      },
+      "base": {
+        "narrative": "EV+energy grow, autonomy partial",
+        "implied_market_cap_usd_trillion": 2.0,
+        "multiple_vs_today": 1.62
+      },
+      "bear": {
+        "narrative": "auto margins stay compressed, autonomy delayed past 2028",
+        "implied_market_cap_usd_trillion": 0.9,
+        "multiple_vs_today": 0.73
+      }
     },
     "capex_guide_usd_billion_per_year": 25
   },
-
   "diamond_hands_inputs": {
     "short_interest_pct_of_shares": 2.11,
-    "short_interest_note": "LOW — this is NOT a squeeze setup (GME was 100%+). Short bets jumped +33% into earnings though",
-    "price_momentum_60d": "choppy: +8% single-day pop on FSD v14 (6/29) -> -7.5% (7/2) -> -13.5% (7/23). High retail attention",
-    "volume_today_vs_avg": "114.8M vs 31.7M avg (3.6x spike)",
-    "price_to_book": 9.5,
-    "value_floor_note": "No deep-value floor at these multiples; this is a story/momentum name, not a GME-style asymmetric setup",
-    "analyst_consensus": { "avg_price_target": 425, "rating": "Buy/Hold mixed; multiple target cuts on 7/23" }
+    "short_interest_note": "Low relative to classic squeeze setups; this is not a GME-style short-interest profile",
+    "price_momentum_60d": "Approximately -24% from the May 26 close to the July 24 close; July 23 fell 14.52% and July 24 fell another 2.08%",
+    "volume_today_vs_avg": "98.09M vs 31.70M recent average (3.09x spike)",
+    "price_to_book": 14.23,
+    "value_floor_note": "No deep-value floor at these multiples; this is a story and momentum stock, not a GME-style asymmetric setup",
+    "analyst_consensus": {
+      "avg_price_target": 425,
+      "rating": "Mixed; provider estimates and target dates vary, so treat this as a dated secondary-source snapshot"
+    }
   },
-
   "cassandra_inputs": {
     "max_historical_drawdown_pct": -75,
-    "max_drawdown_episode": "Nov 2021 ($414 split-adj) -> Jan 2023 (~$102)",
-    "current_valuation_percentile_vs_own_history": "P/E ~330 vs 7yr avg 235 and 5yr avg 136 — top quartile territory even after the crash",
+    "max_drawdown_episode": "Nov 2021 ($414 split-adjusted) to Jan 2023 (about $102)",
+    "current_valuation_percentile_vs_own_history": "P/E about 290 vs 7-year average 235 and 5-year average 136; still above both long-run reference points after the selloff",
     "worst_case_scenario_math": {
-      "if_pe_reverts_to_5yr_avg_136": { "implied_price_usd": 133, "downside_from_current_pct": -59 },
-      "if_pe_reverts_to_forward_market_premium_60x": { "implied_price_usd": 154, "downside_from_current_pct": -52, "note": "using forward EPS ~$2.56" },
-      "moderate_case_pe_200": { "implied_price_usd": 196, "downside_from_current_pct": -39 }
+      "if_pe_reverts_to_5yr_avg_136": {
+        "implied_price_usd": 146.79,
+        "downside_from_current_pct": -53.11
+      },
+      "if_pe_reverts_to_forward_market_premium_60x": {
+        "implied_price_usd": 129.6,
+        "downside_from_current_pct": -58.6,
+        "note": "using forward EPS ~$2.16 consensus estimate; estimates can change"
+      },
+      "moderate_case_pe_200": {
+        "implied_price_usd": 215.88,
+        "downside_from_current_pct": -31.03
+      }
     },
-    "balance_sheet_strength": { "debt_to_equity": 0.19, "current_ratio": 2.04, "altman_z": 14.4, "note": "Balance sheet itself is FORTRESS-level. Cassandra's bear case is about PRICE, not bankruptcy" },
-    "quarterly_fcf": "negative in Q2 2026, first in years"
+    "balance_sheet_strength": {
+      "debt_to_equity": 0.19,
+      "current_ratio": 2.04,
+      "altman_z": 14.4,
+      "note": "The balance sheet is strong. The bear case is about valuation and execution, not near-term bankruptcy."
+    },
+    "quarterly_fcf": "-$1.09B in Q2 2026, the first negative quarter in more than two years"
   },
-
   "moderator_inputs": {
     "usd_scenario_base_10k": {
-      "_note": "TODO: savings rate assumed ~4%/yr — update to the latest real rate on demo morning",
-      "savings_1yr_at_4pct": "$10,000 -> about $10,400 (guaranteed)",
-      "tsla_worst_case_moderate": "$10,000 -> about $6,100 (-39%, if the price tag falls back to a calmer level)",
-      "tsla_worst_case_severe": "$10,000 -> about $4,100 (-59%, if the price tag falls back to its own 5-year average)",
-      "tsla_bull_case_5yr": "$10,000 -> about $33,000 (Moonshot's sunniest 5-year scenario — depends heavily on assumptions)"
+      "_note": "Savings comparison assumes a 4.0% APY; verify an actual insured offer before presenting it as available.",
+      "savings_1yr_at_4pct": "$10,000 -> about $10,400 (assuming 4.0% APY)",
+      "tsla_worst_case_moderate": "$10,000 -> about $6,900 (-31%, if the price tag falls to 200x earnings)",
+      "tsla_worst_case_severe": "$10,000 -> about $4,690 (-53%, if the price tag falls back to its own 5-year average)",
+      "tsla_bull_case_5yr": "$10,000 -> about $32,360 (Moonshot's sunniest 5-year scenario; depends heavily on assumptions)"
     },
     "revisit_triggers_examples": [
-      "Next quarter's results show the company is keeping more of each dollar from every car it sells",
-      "Paid robotaxi rides stop shrinking and start growing again",
-      "The share price drops to where you pay less than 100x next year's expected earnings (roughly near $250)"
+      "Next quarter shows Tesla keeping more operating profit from each dollar of revenue",
+      "Paid robotaxi usage and economics show sustained, measurable improvement",
+      "The share price drops to where you pay less than 100x next year's expected earnings (roughly near $216 using the current $2.16 estimate)"
     ]
   }
 }
