@@ -32,6 +32,49 @@ const MODERATOR_REQUIRED = [
 ];
 const VERDICTS = ["YES", "NO", "YES_SMALL"];
 
+function moderatorMissing(result) {
+  return MODERATOR_REQUIRED.filter((key) => !(key in (result ?? {})));
+}
+
+function buildModeratorFallback(question, verdicts) {
+  const yesWeight = verdicts.reduce(
+    (sum, item) => sum + (item.verdict === "YES" ? 1 : item.verdict === "YES_SMALL" ? 0.5 : 0),
+    0
+  );
+  const noWeight = verdicts.filter((item) => item.verdict === "NO").length;
+  const clearNo = noWeight >= 3;
+  const clearYes = yesWeight >= 3.5;
+  const finalCall = clearNo
+    ? "Please don't buy this right now."
+    : clearYes
+      ? "This one may be worth a closer look — but only with money you can spare."
+      : "This is not a clear signal right now. Even the experts disagree.";
+
+  const downside = verdicts.find((item) => item.persona === "cassandra")?.money_translation_plain;
+  const upside = verdicts.find((item) => item.persona === "moonshot")?.money_translation_plain;
+  const money = [downside, upside].filter(Boolean).join(" ");
+  const revisit = verdicts
+    .map((item) => item.flip_condition_plain)
+    .filter(Boolean)
+    .slice(0, 2)
+    .join(" Or: ");
+
+  return {
+    final_call_plain: finalCall,
+    confidence_label_plain: clearNo || clearYes ? "High confidence" : "Experts disagree",
+    scoreboard: verdicts.map((item) => ({
+      persona: item.persona,
+      verdict: item.verdict,
+      headline_plain: item.headline_plain,
+    })),
+    money_scenario_plain: money || "The panel sees a wide range of possible outcomes, so only use money you can afford to leave untouched for years.",
+    savings_comparison_plain: "The same $10,000 in a savings account becomes about $10,400 in a year, assuming a 4% rate.",
+    revisit_trigger_plain: `When to ask again: ${revisit || "when Tesla reports another quarter of results and the price has changed materially"}.`,
+    safety_note_plain: "The final decision belongs to your family. There is no reason to rush, and any amount at risk should be money you can afford to lose.",
+    share_card_plain: `Your family asked: ${question}\nThe panel decided: ${finalCall}\nTalk together about how much loss the family could comfortably handle.`,
+  };
+}
+
 export async function POST(req) {
   try {
     const body = await req.json();
@@ -106,21 +149,27 @@ export async function POST(req) {
         input: { question: modQuestion, verdicts },
         metadata: { model: ROUNDTABLE_MODEL },
       });
-      const result = await callFireworks({
+      let result = await callFireworks({
         system: moderatorSystemPrompt(),
         user: moderatorUserMessage(modQuestion, verdicts),
         temperature: 0.3,
       });
+      let missing = moderatorMissing(result);
+      if (missing.length > 0) {
+        result = await callFireworks({
+          system: `${moderatorSystemPrompt()}\n\nIMPORTANT RETRY: Return exactly the eight required top-level keys from the OUTPUT schema. This is a moderator verdict, not a follow-up reply or route classification.`,
+          user: moderatorUserMessage(modQuestion, verdicts),
+          temperature: 0,
+        });
+        missing = moderatorMissing(result);
+      }
+      if (missing.length > 0) {
+        console.error(`[moderator] invalid model schema after retry; using deterministic fallback. Missing: ${missing.join(", ")}`);
+        result = buildModeratorFallback(modQuestion, verdicts);
+      }
       modSpan?.log({ output: result });
       modSpan?.end();
       await finishRoot(body.questionId, result);
-      const missing = MODERATOR_REQUIRED.filter((k) => !(k in result));
-      if (missing.length > 0) {
-        return Response.json(
-          { error: "schema mismatch (missing: " + missing.join(", ") + ")" },
-          { status: 502 }
-        );
-      }
       return Response.json({ result });
     }
 
