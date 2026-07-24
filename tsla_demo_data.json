@@ -1,0 +1,102 @@
+{
+  "_meta": {
+    "ticker": "TSLA",
+    "company": "Tesla, Inc.",
+    "as_of": "2026-07-23",
+    "note": "Daytona HackSprint demo cache. All figures compiled from public market data on 2026-07-23 (post Q2 earnings crash). Verify price/PE on demo morning — they move daily.",
+    "sources": "stockanalysis.com, Robinhood, fullratio.com, Yahoo Finance / StockStory, Motley Fool (2026-07-22~23)"
+  },
+
+  "market_snapshot": {
+    "price_usd": 323.55,
+    "price_note": "intraday 2026-07-23, after -13~14% post-earnings drop",
+    "market_cap_usd_trillion": 1.2,
+    "week52_high": 498.83,
+    "week52_low": 297.82,
+    "drop_from_52wk_high_pct": -35.1,
+    "ytd_change_pct": -17,
+    "beta": 1.8
+  },
+
+  "why_it_fell_context": {
+    "one_day_drop_pct": -13.5,
+    "trigger": "2026-07-22 Q2 earnings: non-GAAP EPS $0.33 vs Wall St expectation $0.54 (big miss). Quarterly free cash flow turned NEGATIVE due to surging AI/robotics/robotaxi capex.",
+    "but_also_true": "Revenue $28.24B, +25.5% YoY (beat). Q2 deliveries 480,126, +25% YoY, an 18% beat vs consensus.",
+    "structural_worries": [
+      "BYD retook global EV #1; Tesla US EV share fell from ~80% (2019) to ~44% (2025)",
+      "Volume growth achieved partly via price cuts -> auto margins compressing",
+      "Robotaxi/Optimus = huge spending today, no meaningful revenue yet (dedicated robotaxi fleet not expected until 2027+)",
+      "Analysts cut price targets after the miss; CFO guided capex to stay above $25B and grow for 2-3 more years"
+    ],
+    "parent_translation_ko": "장사(매출)는 역대급으로 잘했는데, 번 돈보다 로봇·자율주행에 쓰는 돈이 훨씬 많아져서 이번 분기 남는 돈이 마이너스가 됐어요. 그래서 하루 만에 13% 넘게 떨어졌어요."
+  },
+
+  "oracle_inputs": {
+    "pe_current": 330,
+    "pe_note": "trailing PE ~364 pre-crash (7/22) -> ~330 post -13.5% drop; forward PE ~165",
+    "pe_3yr_avg": 158,
+    "pe_5yr_avg": 136,
+    "pe_7yr_avg": 235,
+    "roe_by_year": { "2022": 33.5, "2023": 27.8, "2024": 10.4, "2025": 6.5, "ttm_2026": 4.9 },
+    "roe_note": "2023 figure inflated by one-time tax benefit; trend is sharply declining",
+    "debt_to_equity": 0.19,
+    "fcf_ttm_usd_billion": 7.0,
+    "fcf_latest_quarter": "NEGATIVE (Q2 2026)",
+    "fcf_yield_pct_ttm": 0.5,
+    "kr_savings_rate_pct": 3.0,
+    "kr_savings_note": "국내 1년 정기예금 대략치. 데모 전날 최신 금리로 갱신할 것"
+  },
+
+  "moonshot_inputs": {
+    "revenue_ttm_usd_billion": 105,
+    "revenue_growth_latest_q_yoy_pct": 25.5,
+    "revenue_growth_note": "2023-2025 growth was nearly flat (~$97B plateau); 2026 reaccelerated to +25% on volume/energy",
+    "deliveries_q2_2026": 480126,
+    "deliveries_growth_yoy_pct": 25,
+    "fsd_catalyst": "FSD v14 Lite rollout (June 2026) reached older Hardware 3 cars; robotaxi network live but paid miles DECLINED q/q in Q2",
+    "tam_scenarios_5yr": {
+      "_note": "These are DEMO ASSUMPTIONS (Moonshot's framework), not market data",
+      "bull": { "narrative": "robotaxi+Optimus commercialize by 2029", "implied_market_cap_usd_trillion": 4.0, "multiple_vs_today": 3.3 },
+      "base": { "narrative": "EV+energy grow, autonomy partial", "implied_market_cap_usd_trillion": 2.0, "multiple_vs_today": 1.7 },
+      "bear": { "narrative": "auto margins stay compressed, autonomy delayed past 2028", "implied_market_cap_usd_trillion": 0.9, "multiple_vs_today": 0.75 }
+    },
+    "capex_guide_usd_billion_per_year": 25
+  },
+
+  "diamond_hands_inputs": {
+    "short_interest_pct_of_shares": 2.11,
+    "short_interest_note": "LOW — this is NOT a squeeze setup (GME was 100%+). Short bets jumped +33% into earnings though",
+    "price_momentum_60d": "choppy: +8% single-day pop on FSD v14 (6/29) -> -7.5% (7/2) -> -13.5% (7/23). High retail attention",
+    "volume_today_vs_avg": "114.8M vs 31.7M avg (3.6x spike)",
+    "price_to_book": 9.5,
+    "value_floor_note": "No deep-value floor at these multiples; this is a story/momentum name, not a GME-style asymmetric setup",
+    "analyst_consensus": { "avg_price_target": 425, "rating": "Buy/Hold mixed; multiple target cuts on 7/23" }
+  },
+
+  "cassandra_inputs": {
+    "max_historical_drawdown_pct": -75,
+    "max_drawdown_episode": "Nov 2021 ($414 split-adj) -> Jan 2023 (~$102)",
+    "current_valuation_percentile_vs_own_history": "P/E ~330 vs 7yr avg 235 and 5yr avg 136 — top quartile territory even after the crash",
+    "worst_case_scenario_math": {
+      "if_pe_reverts_to_5yr_avg_136": { "implied_price_usd": 133, "downside_from_current_pct": -59 },
+      "if_pe_reverts_to_forward_market_premium_60x": { "implied_price_usd": 154, "downside_from_current_pct": -52, "note": "using forward EPS ~$2.56" },
+      "moderate_case_pe_200": { "implied_price_usd": 196, "downside_from_current_pct": -39 }
+    },
+    "balance_sheet_strength": { "debt_to_equity": 0.19, "current_ratio": 2.04, "altman_z": 14.4, "note": "Balance sheet itself is FORTRESS-level. Cassandra's bear case is about PRICE, not bankruptcy" },
+    "quarterly_fcf": "negative in Q2 2026, first in years"
+  },
+
+  "moderator_inputs": {
+    "krw_scenario_base_10m": {
+      "deposit_1yr_at_3pct": "1,000만원 -> 약 1,030만원 (확정)",
+      "tsla_worst_case_moderate": "1,000만원 -> 약 610만원 (P/E 200 회귀 시 -39%)",
+      "tsla_worst_case_severe": "1,000만원 -> 약 410만원 (역사적 밸류에이션 회귀 시 -59%)",
+      "tsla_bull_case_5yr": "1,000만원 -> 약 3,300만원 (Moonshot 강세 시나리오, 가정에 크게 의존)"
+    },
+    "revisit_triggers_examples": [
+      "자동차 마진이 다시 안정되었다는 다음 분기 실적",
+      "로보택시 유료 주행거리가 감소세에서 증가세로 전환",
+      "주가가 forward P/E 기준 100배 아래로 내려올 때 (대략 $250 근처)"
+    ]
+  }
+}
