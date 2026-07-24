@@ -244,6 +244,9 @@ export default function Home() {
   const [asked, setAsked] = useState(null);
   const [cards, setCards] = useState({});
   const [mod, setMod] = useState({ status: "idle" });
+  const [chat, setChat] = useState([]);
+  const [chatBusy, setChatBusy] = useState(false);
+  const [classifying, setClassifying] = useState(false);
   const modSigRef = useRef(null);
   const questionIdRef = useRef(null);
 
@@ -263,15 +266,67 @@ export default function Home() {
     }
   };
 
-  const ask = (q) => {
-    const trimmed = q.trim();
-    if (!trimmed) return;
+  // The frozen core flow: full round table (4 personas + moderator).
+  const startRoundTable = (trimmed) => {
     setAsked(trimmed);
     setQuestion(trimmed);
     setMod({ status: "idle" });
+    setChat([]);
     modSigRef.current = null;
     questionIdRef.current = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random());
     PERSONAS.forEach((p) => askPersona(p.id, trimmed));
+  };
+
+  const buildFollowupContext = () => ({
+    originalQuestion: asked,
+    personas: Object.fromEntries(PERSONAS.map((p) => [p.id, cards[p.id]?.data ?? null])),
+    calc: Object.fromEntries(PERSONAS.map((p) => [p.id, cards[p.id]?.calc ?? null])),
+    moderator: mod.data ?? null,
+  });
+
+  const askFollowup = async (trimmed) => {
+    setQuestion("");
+    setChat((c) => [...c, { role: "user", text: trimmed }]);
+    setChatBusy(true);
+    try {
+      const r = await fetch("/api/roundtable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "followup", question: trimmed, context: buildFollowupContext() }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error ?? "HTTP " + r.status);
+      setChat((c) => [...c, { role: "table", text: j.result.reply_plain }]);
+    } catch (e) {
+      setChat((c) => [...c, { role: "table", text: "Sorry — I hit a snag answering that (" + e.message + "). Please try again." }]);
+    } finally {
+      setChatBusy(false);
+    }
+  };
+
+  const ask = async (q) => {
+    const trimmed = q.trim();
+    if (!trimmed) return;
+    const hasVerdict = mod.status === "done";
+    // Classify first; on any failure fall back to the proven full pipeline.
+    let route = "new_verdict";
+    setClassifying(true);
+    try {
+      const r = await fetch("/api/roundtable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "classify", question: trimmed, hasVerdict }),
+      });
+      const j = await r.json();
+      if (r.ok && j.result?.route) route = j.result.route;
+    } catch {
+      // fall through to new_verdict
+    } finally {
+      setClassifying(false);
+    }
+    if (route === "followup" && !hasVerdict) route = "new_verdict";
+    if (route === "new_verdict") return startRoundTable(trimmed);
+    return askFollowup(trimmed); // followup + out_of_scope (scope honesty lives in the prompt)
   };
 
   const runModerator = async (verdicts, sig) => {
@@ -302,7 +357,7 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cards, asked]);
 
-  const busy = PERSONAS.some((p) => cards[p.id]?.status === "loading") || mod.status === "loading";
+  const busy = PERSONAS.some((p) => cards[p.id]?.status === "loading") || mod.status === "loading" || chatBusy || classifying;
 
   return (
     <main style={{ maxWidth: "980px", margin: "0 auto", padding: "24px 20px 60px", display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -326,7 +381,7 @@ export default function Home() {
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !busy && ask(question)}
-          placeholder="Ask anything — no dumb questions"
+          placeholder={mod.status === "done" ? "Ask a follow-up — or start a new question" : "Ask anything — no dumb questions"}
           style={{ flex: 1, padding: "12px 16px", borderRadius: "12px", border: "1px solid #d1d5db", fontSize: "15px", outline: "none" }}
         />
         <button
@@ -339,7 +394,7 @@ export default function Home() {
             fontWeight: 700, fontSize: "15px", cursor: busy || !question.trim() ? "default" : "pointer",
           }}
         >
-          {busy ? "Debating…" : "Ask the table"}
+          {classifying ? "Reading…" : busy ? "Debating…" : "Ask the table"}
         </button>
       </div>
 
@@ -373,6 +428,37 @@ export default function Home() {
           if (verdicts.length === 4) runModerator(verdicts, modSigRef.current);
         }}
       />
+
+      {chat.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <div style={{ fontSize: "12px", letterSpacing: "0.1em", color: "#6b7280", fontWeight: 700 }}>
+            💬 FOLLOW-UP CONVERSATION
+          </div>
+          {chat.map((m, i) => (
+            <div
+              key={i}
+              style={{
+                alignSelf: m.role === "user" ? "flex-end" : "flex-start",
+                maxWidth: "85%",
+                padding: "10px 14px",
+                borderRadius: m.role === "user" ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
+                background: m.role === "user" ? "#111827" : "#f3f4f6",
+                color: m.role === "user" ? "#fff" : "#111827",
+                fontSize: "14px",
+                lineHeight: 1.55,
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {m.text}
+            </div>
+          ))}
+          {chatBusy && (
+            <div className="rt-pulse" style={{ color: "#6b7280", fontSize: "13px" }}>
+              🎙️ The Moderator is thinking…
+            </div>
+          )}
+        </div>
+      )}
 
       <footer style={{ fontSize: "12px", color: "#9ca3af", textAlign: "center", marginTop: "8px" }}>
         Educational personas based on each investor&apos;s public philosophy. Not affiliated. Not financial advice.

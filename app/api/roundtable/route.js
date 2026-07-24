@@ -9,6 +9,11 @@ import {
 } from "../../../lib/roundtable";
 import { runCalc } from "../../../lib/calc";
 import { getRootSpan, startChildSpan, finishRoot } from "../../../lib/trace";
+import {
+  classifierSystemPrompt,
+  followupSystemPrompt,
+  followupUserMessage,
+} from "../../../lib/followup";
 
 const PERSONA_REQUIRED = [
   "persona", "verdict", "confidence", "headline_plain", "analogy_plain",
@@ -102,6 +107,39 @@ export async function POST(req) {
         );
       }
       return Response.json({ result });
+    }
+
+    if (body.type === "classify") {
+      const { question, hasVerdict } = body;
+      if (!question?.trim()) {
+        return Response.json({ error: "question is required" }, { status: 400 });
+      }
+      const result = await callFireworks({
+        system: classifierSystemPrompt(!!hasVerdict),
+        user: question.trim(),
+        temperature: 0,
+        maxTokens: 1024,
+      });
+      const route = ["new_verdict", "followup", "out_of_scope"].includes(result.route)
+        ? result.route
+        : "new_verdict";
+      return Response.json({ result: { route } });
+    }
+
+    if (body.type === "followup") {
+      const { question, context } = body;
+      if (!question?.trim()) {
+        return Response.json({ error: "question is required" }, { status: 400 });
+      }
+      const result = await callFireworks({
+        system: followupSystemPrompt(),
+        user: followupUserMessage(question.trim(), context),
+        temperature: 0.4,
+      });
+      if (typeof result.reply_plain !== "string" || !result.reply_plain.trim()) {
+        return Response.json({ error: "schema mismatch (missing reply_plain)" }, { status: 502 });
+      }
+      return Response.json({ result: { reply_plain: result.reply_plain } });
     }
 
     return Response.json({ error: "unknown request type" }, { status: 400 });
