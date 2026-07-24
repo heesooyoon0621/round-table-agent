@@ -7,5 +7,24 @@
 html,
 body {
   height: 100%;
-  font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+  background: #f6f8fc;
+  color: #172033;
+  font-family: Inter, "Segoe UI", "Malgun Gothic", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:focus-visible,
+input:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #93c5fd;
+  outline-offset: 2px;
 }

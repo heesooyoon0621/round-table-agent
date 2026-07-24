@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 const PERSONAS = [
-  { id: "oracle", name: "Warren Buffett", shortName: "Buffett", emoji: "🦉", tagline: "Buys great businesses at fair prices — and waits" },
-  { id: "moonshot", name: "Cathie Wood", shortName: "Wood", emoji: "🚀", tagline: "Bets big on the future, loves a dip" },
-  { id: "diamond_hands", name: "Roaring Kitty", shortName: "Roaring Kitty", emoji: "💎", tagline: "Does his homework, sides with the little guy" },
-  { id: "cassandra", name: "Michael Burry", shortName: "Burry", emoji: "🌧️", tagline: "Asks what could go wrong — before anyone else" },
+  { id: "oracle", name: "Warren Buffett", shortName: "Buffett", emoji: "🦉", lens: "Value lens", color: "#0f766e", tagline: "Buys great businesses at fair prices — and waits" },
+  { id: "moonshot", name: "Cathie Wood", shortName: "Wood", emoji: "🚀", lens: "Growth lens", color: "#7c3aed", tagline: "Bets big on the future, loves a dip" },
+  { id: "diamond_hands", name: "Roaring Kitty", shortName: "Roaring Kitty", emoji: "💎", lens: "Community lens", color: "#db2777", tagline: "Does his homework, sides with the little guy" },
+  { id: "cassandra", name: "Michael Burry", shortName: "Burry", emoji: "🌧️", lens: "Risk lens", color: "#b45309", tagline: "Asks what could go wrong — before anyone else" },
 ];
 
 const EXAMPLE_QUESTIONS = [
@@ -69,11 +69,14 @@ function PersonaCard({ meta, state, onRetry }) {
   };
 
   return (
-    <div style={base}>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <span style={{ fontSize: "22px" }}>{meta.emoji}</span>
+    <div className="rt-persona-card" style={{ ...base, "--persona-color": meta.color }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <span className="rt-persona-icon">{meta.emoji}</span>
         <div style={{ flex: 1 }}>
-          <div style={{ fontWeight: 700, fontSize: "15px" }}>{meta.name}</div>
+          <div style={{ display: "flex", alignItems: "center", gap: "7px", flexWrap: "wrap" }}>
+            <div style={{ fontWeight: 700, fontSize: "15px" }}>{meta.name}</div>
+            <span className="rt-lens">{meta.lens}</span>
+          </div>
           <div style={{ fontSize: "11px", color: "#9ca3af" }}>{meta.tagline}</div>
         </div>
         {state?.status === "done" && <VerdictBadge verdict={state.data.verdict} />}
@@ -165,11 +168,11 @@ function ModeratorPanel({ mod, onRetry }) {
   const d = mod.data;
   const box = { border: "1px solid #e5e7eb", borderRadius: "12px", padding: "14px", fontSize: "14px", lineHeight: 1.55 };
   return (
-    <div style={{ border: "2px solid #111827", borderRadius: "16px", padding: "24px", background: "#fff", display: "flex", flexDirection: "column", gap: "16px" }}>
+    <section className="rt-verdict" style={{ border: "2px solid #111827", borderRadius: "20px", padding: "clamp(20px, 4vw, 32px)", background: "#fff", display: "flex", flexDirection: "column", gap: "16px" }}>
       <div style={{ fontSize: "12px", letterSpacing: "0.1em", color: "#6b7280", fontWeight: 700 }}>
         🎙️ THE ROUND TABLE&apos;S FAMILY VERDICT
       </div>
-      <div style={{ fontSize: "32px", fontWeight: 800, lineHeight: 1.25, letterSpacing: "-0.01em" }}>{d.final_call_plain}</div>
+      <div className="rt-verdict-title" style={{ fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 800, lineHeight: 1.16, letterSpacing: "-0.03em" }}>{d.final_call_plain}</div>
       <div>
         <span style={{
           background: d.confidence_label_plain === "High confidence" ? "#dcfce7" : "#fef9c3",
@@ -195,7 +198,7 @@ function ModeratorPanel({ mod, onRetry }) {
         })}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "10px" }}>
+      <div className="rt-money-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "10px" }}>
         <div style={{ ...box, background: "#fff7ed" }}>
           <b>📈 If you put in $10,000…</b><br />{d.money_scenario_plain}
         </div>
@@ -214,7 +217,7 @@ function ModeratorPanel({ mod, onRetry }) {
         <div style={{ ...box, marginTop: "10px", whiteSpace: "pre-wrap", background: "#f9fafb" }}>{d.share_card_plain}</div>
       </details>
       <ShareButton text={d.share_card_plain} />
-    </div>
+    </section>
   );
 }
 
@@ -516,33 +519,58 @@ export default function Home() {
   const busy = PERSONAS.some((p) => cards[p.id]?.status === "loading") || mod.status === "loading" || chatBusy || classifying;
 
   return (
-    <main style={{ maxWidth: "980px", margin: "0 auto", padding: "24px 20px 60px", display: "flex", flexDirection: "column", gap: "20px" }}>
+    <main className="rt-app" style={{ maxWidth: "1080px", margin: "0 auto", padding: "clamp(20px, 4vw, 48px) 20px 72px", display: "flex", flexDirection: "column", gap: "24px" }}>
       <style>{`
+        .rt-app { color: #172033; }
         .rt-pulse { animation: rtpulse 1.4s ease-in-out infinite; }
         @keyframes rtpulse { 0%,100% {opacity:.45} 50% {opacity:1} }
         .rt-skel { height: 12px; border-radius: 6px; background: #e5e7eb; animation: rtpulse 1.4s ease-in-out infinite; }
-        .rt-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        .rt-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+        .rt-hero { padding: clamp(22px, 5vw, 44px); border: 1px solid #dbe4f0; border-radius: 24px; background: radial-gradient(circle at 88% 10%, #dbeafe 0, transparent 28%), linear-gradient(135deg, #f8fafc, #ffffff); }
+        .rt-kicker { color: #2563eb; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 10px; }
+        .rt-hero h1 { font-size: clamp(32px, 5vw, 52px) !important; line-height: 1.04; letter-spacing: -.045em; }
+        .rt-hero p { max-width: 650px; font-size: 16px !important; line-height: 1.6; margin-top: 14px !important; }
+        .rt-composer { display: flex; gap: 10px; padding: 10px; border: 1px solid #dbe4f0; border-radius: 18px; background: #fff; box-shadow: 0 10px 28px rgba(15, 23, 42, .06); }
+        .rt-composer input { border: 0 !important; background: transparent; padding: 12px 10px !important; }
+        .rt-composer input:focus { box-shadow: none; }
+        .rt-composer:focus-within { border-color: #2563eb; box-shadow: 0 0 0 4px #dbeafe; }
+        .rt-primary-button { transition: transform .16s ease, background .16s ease; }
+        .rt-primary-button:not(:disabled):hover { background: #2563eb !important; transform: translateY(-1px); }
+        .rt-examples { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .rt-examples-label { color: #64748b; font-size: 12px; font-weight: 700; margin-right: 2px; }
+        .rt-example { transition: border-color .16s ease, background .16s ease; }
+        .rt-example:hover { background: #eff6ff !important; border-color: #93c5fd !important; }
+        .rt-persona-card { border-top: 4px solid var(--persona-color) !important; box-shadow: 0 4px 14px rgba(15, 23, 42, .04); transition: transform .18s ease, box-shadow .18s ease; }
+        .rt-persona-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(15, 23, 42, .09); }
+        .rt-persona-icon { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: color-mix(in srgb, var(--persona-color) 12%, white); font-size: 21px; }
+        .rt-lens { color: var(--persona-color); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+        .rt-verdict { box-shadow: 0 18px 40px rgba(15, 23, 42, .1); }
+        .rt-money-grid > div { border-radius: 14px !important; }
         @media (min-width: 640px) { .rt-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 639px) { .rt-composer { flex-direction: column; } .rt-composer button { width: 100%; } .rt-examples { align-items: flex-start; } }
       `}</style>
 
-      <header>
-        <h1 style={{ fontSize: "26px" }}>🏛️ The Round Table</h1>
+      <header className="rt-hero">
+        <div className="rt-kicker">Plain-English investing perspective</div>
+        <h1 style={{ fontSize: "26px" }}>The Round Table</h1>
         <p style={{ fontSize: "14px", color: "#6b7280", marginTop: "4px" }}>
           Four legendary investors debate your question — then explain it like a kind neighbor. No question is too basic.
         </p>
       </header>
 
-      <div style={{ display: "flex", gap: "8px" }}>
+      <div className="rt-composer">
         <input
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !busy && ask(question)}
           placeholder={mod.status === "done" ? "Ask a follow-up — or start a new question" : "Ask anything — no dumb questions"}
+          aria-label="Your investing question"
           style={{ flex: 1, padding: "12px 16px", borderRadius: "12px", border: "1px solid #d1d5db", fontSize: "15px", outline: "none" }}
         />
         <button
           onClick={() => ask(question)}
           disabled={busy || !question.trim()}
+          className="rt-primary-button"
           style={{
             padding: "12px 22px", borderRadius: "12px", border: "none",
             background: busy || !question.trim() ? "#e5e7eb" : "#111827",
@@ -554,9 +582,10 @@ export default function Home() {
         </button>
       </div>
 
-      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+      <div className="rt-examples">
+        <span className="rt-examples-label">Try an example:</span>
         {EXAMPLE_QUESTIONS.map((q) => (
-          <button key={q} onClick={() => !busy && ask(q)} style={{
+          <button className="rt-example" key={q} onClick={() => !busy && ask(q)} style={{
             padding: "8px 14px", borderRadius: "999px", border: "1px solid #d1d5db",
             background: "#f9fafb", fontSize: "13px", cursor: busy ? "default" : "pointer", textAlign: "left",
           }}>
