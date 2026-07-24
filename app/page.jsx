@@ -97,12 +97,14 @@ function PersonaCard({ meta, state, onRetry }) {
           <div style={{ color: "#991b1b", marginBottom: "8px" }}>
             Couldn&apos;t get an answer ({state.error})
           </div>
-          <button onClick={onRetry} style={{
-            padding: "6px 14px", borderRadius: "8px", border: "1px solid #d1d5db",
-            background: "#f9fafb", cursor: "pointer", fontSize: "13px", fontWeight: 600,
-          }}>
-            ↻ Try again
-          </button>
+          {onRetry && (
+            <button onClick={onRetry} style={{
+              padding: "6px 14px", borderRadius: "8px", border: "1px solid #d1d5db",
+              background: "#f9fafb", cursor: "pointer", fontSize: "13px", fontWeight: 600,
+            }}>
+              ↻ Try again
+            </button>
+          )}
         </div>
       )}
 
@@ -151,9 +153,11 @@ function ModeratorPanel({ mod, onRetry }) {
     return (
       <div style={{ border: "2px solid #fca5a5", borderRadius: "16px", padding: "24px", textAlign: "center" }}>
         <div style={{ color: "#991b1b", marginBottom: "10px" }}>The Moderator hit a snag ({mod.error})</div>
-        <button onClick={onRetry} style={{ padding: "8px 18px", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", cursor: "pointer", fontWeight: 600 }}>
-          ↻ Ask the Moderator again
-        </button>
+        {onRetry && (
+          <button onClick={onRetry} style={{ padding: "8px 18px", borderRadius: "8px", border: "1px solid #d1d5db", background: "#f9fafb", cursor: "pointer", fontWeight: 600 }}>
+            ↻ Ask the Moderator again
+          </button>
+        )}
       </div>
     );
   }
@@ -214,6 +218,21 @@ function ModeratorPanel({ mod, onRetry }) {
   );
 }
 
+function ScenarioBlock({ sc }) {
+  if (!sc) return null;
+  return (
+    <div style={{ border: "2px dashed #9ca3af", borderRadius: "16px", padding: "16px", display: "flex", flexDirection: "column", gap: "14px", background: "#fcfcfd" }}>
+      <div style={{ fontWeight: 800, fontSize: "16px" }}>{sc.label}</div>
+      <div className="rt-grid">
+        {PERSONAS.map((p) => (
+          <PersonaCard key={p.id} meta={p} state={sc.cards[p.id]} onRetry={null} />
+        ))}
+      </div>
+      <ModeratorPanel mod={sc.mod} onRetry={null} />
+    </div>
+  );
+}
+
 function ShareButton({ text }) {
   const [copied, setCopied] = useState(false);
   const copy = async () => {
@@ -245,6 +264,7 @@ export default function Home() {
   const [cards, setCards] = useState({});
   const [mod, setMod] = useState({ status: "idle" });
   const [chat, setChat] = useState([]);
+  const [scenarios, setScenarios] = useState({});
   const [chatBusy, setChatBusy] = useState(false);
   const [classifying, setClassifying] = useState(false);
   const modSigRef = useRef(null);
@@ -304,12 +324,71 @@ export default function Home() {
     }
   };
 
+  const updateScenario = (id, fn) => setScenarios((s) => ({ ...s, [id]: fn(s[id]) }));
+
+  // Scenario follow-up: re-convene the table on modified inputs (price ±pct%).
+  const runScenario = async (trimmed, pct, label) => {
+    const id = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random());
+    const qid = (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : String(Math.random());
+    setQuestion("");
+    setChat((c) => [...c, { role: "user", text: trimmed }, { role: "scenario", id }]);
+    setScenarios((s) => ({
+      ...s,
+      [id]: {
+        label,
+        cards: Object.fromEntries(PERSONAS.map((p) => [p.id, { status: "loading" }])),
+        mod: { status: "idle" },
+      },
+    }));
+    setChatBusy(true);
+    try {
+      const results = await Promise.all(PERSONAS.map(async (p) => {
+        try {
+          const r = await fetch("/api/roundtable", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "persona", personaId: p.id, question: trimmed, questionId: qid, scenarioPct: pct }),
+          });
+          const j = await r.json();
+          if (!r.ok) throw new Error(j.error ?? "HTTP " + r.status);
+          updateScenario(id, (sc) => ({ ...sc, cards: { ...sc.cards, [p.id]: { status: "done", data: j.result, calc: j.calc, calcSource: j.calcSource } } }));
+          return j.result;
+        } catch (e) {
+          updateScenario(id, (sc) => ({ ...sc, cards: { ...sc.cards, [p.id]: { status: "error", error: e.message } } }));
+          return null;
+        }
+      }));
+      const four = results.filter(Boolean);
+      if (four.length === 4) {
+        updateScenario(id, (sc) => ({ ...sc, mod: { status: "loading" } }));
+        try {
+          const r = await fetch("/api/roundtable", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ type: "moderator", question: trimmed, verdicts: four, questionId: qid, scenarioPct: pct }),
+          });
+          const j = await r.json();
+          if (!r.ok) throw new Error(j.error ?? "HTTP " + r.status);
+          updateScenario(id, (sc) => ({ ...sc, mod: { status: "done", data: j.result } }));
+        } catch (e) {
+          updateScenario(id, (sc) => ({ ...sc, mod: { status: "error", error: e.message } }));
+        }
+      } else {
+        updateScenario(id, (sc) => ({ ...sc, mod: { status: "error", error: "some panelists failed — please ask the scenario again" } }));
+      }
+    } finally {
+      setChatBusy(false);
+    }
+  };
+
   const ask = async (q) => {
     const trimmed = q.trim();
     if (!trimmed) return;
     const hasVerdict = mod.status === "done";
     // Classify first; on any failure fall back to the proven full pipeline.
     let route = "new_verdict";
+    let scenarioPct = null;
+    let scenarioLbl = null;
     setClassifying(true);
     try {
       const r = await fetch("/api/roundtable", {
@@ -318,16 +397,22 @@ export default function Home() {
         body: JSON.stringify({ type: "classify", question: trimmed, hasVerdict }),
       });
       const j = await r.json();
-      if (r.ok && j.result?.route) route = j.result.route;
+      if (r.ok && j.result?.route) {
+        route = j.result.route;
+        scenarioPct = j.result.priceChangePct ?? null;
+        scenarioLbl = j.result.label ?? null;
+      }
     } catch {
       // fall through to new_verdict
     } finally {
       setClassifying(false);
     }
-    if (route === "followup" && !hasVerdict) route = "new_verdict";
-    console.info("[roundtable route]", route, "—", trimmed);
+    if (route.startsWith("followup") && !hasVerdict) route = "new_verdict";
+    if (route === "followup_scenario" && (scenarioPct == null || !scenarioLbl)) route = "followup_explain";
+    console.info("[roundtable route]", route, scenarioPct ?? "", "—", trimmed);
     if (route === "new_verdict") return startRoundTable(trimmed);
-    return askFollowup(trimmed); // followup + out_of_scope (scope honesty lives in the prompt)
+    if (route === "followup_scenario") return runScenario(trimmed, scenarioPct, scenarioLbl);
+    return askFollowup(trimmed); // followup_explain + out_of_scope (scope honesty lives in the prompt)
   };
 
   const verdictSummaryLine = () => {
@@ -472,7 +557,9 @@ export default function Home() {
           </details>
 
           {/* Follow-up exchanges */}
-          {chat.map((m, i) => (
+          {chat.map((m, i) => m.role === "scenario" ? (
+            <ScenarioBlock key={m.id} sc={scenarios[m.id]} />
+          ) : (
             <div
               key={i}
               style={{

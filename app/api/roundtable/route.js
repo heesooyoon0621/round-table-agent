@@ -14,6 +14,11 @@ import {
   followupSystemPrompt,
   followupUserMessage,
 } from "../../../lib/followup";
+import { buildScenarioRawInput, scenarioLabel } from "../../../lib/scenario";
+
+function validScenarioPct(pct) {
+  return typeof pct === "number" && isFinite(pct) && pct >= -90 && pct <= 300 && pct !== 0;
+}
 
 const PERSONA_REQUIRED = [
   "persona", "verdict", "confidence", "headline_plain", "analogy_plain",
@@ -45,12 +50,18 @@ export async function POST(req) {
         input: question.trim(),
       });
 
+      const scenarioActive = validScenarioPct(body.scenarioPct);
+      const rawOverride = scenarioActive ? buildScenarioRawInput(body.scenarioPct) : undefined;
+      const effectiveQuestion = scenarioActive
+        ? `${scenarioLabel(body.scenarioPct)} (hypothetical — all numbers recomputed at the new price). User asked: ${question.trim()}`
+        : question.trim();
+
       const calcSpan = startChildSpan(root && (await personaSpan?.export()), {
         name: "calc:" + personaId,
         type: "tool",
-        input: { personaId, script: "calcs/" + personaId + "_calc.py" },
+        input: { personaId, script: "calcs/" + personaId + "_calc.py", scenarioPct: scenarioActive ? body.scenarioPct : undefined },
       });
-      const { calc, source: calcSource } = await runCalc(personaId);
+      const { calc, source: calcSource } = await runCalc(personaId, rawOverride);
       calcSpan?.log({ output: calc, metadata: { source: calcSource } });
       calcSpan?.end();
 
@@ -62,7 +73,7 @@ export async function POST(req) {
       });
       const result = await callFireworks({
         system: personaSystemPrompt(personaId),
-        user: personaUserMessage(personaId, question.trim(), calc),
+        user: personaUserMessage(personaId, effectiveQuestion, calc),
         temperature: 0.6,
       });
       llmSpan?.log({ output: result });
@@ -84,16 +95,20 @@ export async function POST(req) {
       if (!Array.isArray(verdicts) || verdicts.length !== 4) {
         return Response.json({ error: "verdicts must contain 4 persona results" }, { status: 400 });
       }
-      const root = await getRootSpan(body.questionId, question?.trim() ?? "");
+      const modScenario = validScenarioPct(body.scenarioPct);
+      const modQuestion = modScenario
+        ? `${scenarioLabel(body.scenarioPct)} (hypothetical — the panel verdicts below were produced at the new price). User asked: ${question?.trim() ?? ""}`
+        : (question?.trim() ?? "");
+      const root = await getRootSpan(body.questionId, modQuestion);
       const modSpan = startChildSpan(root?.exported, {
         name: "moderator",
         type: "llm",
-        input: { question: question?.trim(), verdicts },
+        input: { question: modQuestion, verdicts },
         metadata: { model: ROUNDTABLE_MODEL },
       });
       const result = await callFireworks({
         system: moderatorSystemPrompt(),
-        user: moderatorUserMessage(question?.trim() ?? "", verdicts),
+        user: moderatorUserMessage(modQuestion, verdicts),
         temperature: 0.3,
       });
       modSpan?.log({ output: result });
@@ -120,10 +135,19 @@ export async function POST(req) {
         temperature: 0,
         maxTokens: 1024,
       });
-      const route = ["new_verdict", "followup", "out_of_scope"].includes(result.route)
+      const route = ["new_verdict", "followup_explain", "followup_scenario", "out_of_scope"].includes(result.route)
         ? result.route
         : "new_verdict";
-      return Response.json({ result: { route } });
+      const pct = Number(result.price_change_pct);
+      if (route === "followup_scenario" && !validScenarioPct(pct)) {
+        // unparseable scenario -> safest is an explanatory answer
+        return Response.json({ result: { route: "followup_explain" } });
+      }
+      return Response.json({
+        result: route === "followup_scenario"
+          ? { route, priceChangePct: pct, label: scenarioLabel(pct) }
+          : { route },
+      });
     }
 
     if (body.type === "followup") {
