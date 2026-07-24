@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "The Round Table — Chat",
+  title: "The Round Table",
   description: "Plain-English money talk, powered by Fireworks AI",
 };
 

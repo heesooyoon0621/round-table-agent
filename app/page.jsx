@@ -83,7 +83,14 @@ function PersonaCard({ meta, state, onRetry }) {
         <div style={{ color: "#9ca3af", fontSize: "13px" }}>Waiting for a question…</div>
       )}
 
-      {state?.status === "loading" && <LoadingLine />}
+      {state?.status === "loading" && (
+        <>
+          <LoadingLine />
+          <div className="rt-skel" style={{ width: "85%" }} />
+          <div className="rt-skel" style={{ width: "70%" }} />
+          <div className="rt-skel" style={{ width: "55%" }} />
+        </>
+      )}
 
       {state?.status === "error" && (
         <div style={{ fontSize: "13px" }}>
@@ -158,7 +165,7 @@ function ModeratorPanel({ mod, onRetry }) {
       <div style={{ fontSize: "12px", letterSpacing: "0.1em", color: "#6b7280", fontWeight: 700 }}>
         🎙️ THE ROUND TABLE&apos;S FAMILY VERDICT
       </div>
-      <div style={{ fontSize: "24px", fontWeight: 800, lineHeight: 1.35 }}>{d.final_call_plain}</div>
+      <div style={{ fontSize: "32px", fontWeight: 800, lineHeight: 1.25, letterSpacing: "-0.01em" }}>{d.final_call_plain}</div>
       <div>
         <span style={{
           background: d.confidence_label_plain === "High confidence" ? "#dcfce7" : "#fef9c3",
@@ -169,15 +176,15 @@ function ModeratorPanel({ mod, onRetry }) {
         </span>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "5px" }}>
         {(d.scoreboard ?? []).map((row, i) => {
           const meta = PERSONAS.find((p) =>
             String(row.persona ?? "").toLowerCase().replace(/[^a-z]/g, "").includes(p.id.replace("_", ""))
           ) ?? PERSONAS[i];
           return (
-            <div key={i} style={{ display: "flex", alignItems: "baseline", gap: "10px", fontSize: "14px" }}>
-              <span style={{ whiteSpace: "nowrap", fontWeight: 700 }}>{meta?.emoji} {meta?.shortName ?? row.persona}</span>
-              <VerdictBadge verdict={row.verdict} size={11} />
+            <div key={i} style={{ display: "flex", alignItems: "baseline", gap: "8px", fontSize: "13px", lineHeight: 1.4 }}>
+              <span style={{ whiteSpace: "nowrap", fontWeight: 700, minWidth: "110px" }}>{meta?.emoji} {meta?.shortName ?? row.persona}</span>
+              <VerdictBadge verdict={row.verdict} size={10} />
               <span style={{ color: "#4b5563" }}>{row.headline_plain}</span>
             </div>
           );
@@ -202,7 +209,33 @@ function ModeratorPanel({ mod, onRetry }) {
         </summary>
         <div style={{ ...box, marginTop: "10px", whiteSpace: "pre-wrap", background: "#f9fafb" }}>{d.share_card_plain}</div>
       </details>
+      <ShareButton text={d.share_card_plain} />
     </div>
+  );
+}
+
+function ShareButton({ text }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(text ?? "");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard unavailable (e.g. insecure context) — leave the button as-is
+    }
+  };
+  return (
+    <button
+      onClick={copy}
+      style={{
+        alignSelf: "flex-start", padding: "10px 18px", borderRadius: "10px",
+        border: "none", background: copied ? "#16a34a" : "#111827", color: "#fff",
+        fontWeight: 700, fontSize: "14px", cursor: "pointer",
+      }}
+    >
+      {copied ? "✅ Copied!" : "📋 Share with family"}
+    </button>
   );
 }
 
@@ -273,7 +306,13 @@ export default function Home() {
 
   return (
     <main style={{ maxWidth: "980px", margin: "0 auto", padding: "24px 20px 60px", display: "flex", flexDirection: "column", gap: "20px" }}>
-      <style>{`.rt-pulse { animation: rtpulse 1.4s ease-in-out infinite; } @keyframes rtpulse { 0%,100% {opacity:.45} 50% {opacity:1} }`}</style>
+      <style>{`
+        .rt-pulse { animation: rtpulse 1.4s ease-in-out infinite; }
+        @keyframes rtpulse { 0%,100% {opacity:.45} 50% {opacity:1} }
+        .rt-skel { height: 12px; border-radius: 6px; background: #e5e7eb; animation: rtpulse 1.4s ease-in-out infinite; }
+        .rt-grid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+        @media (min-width: 640px) { .rt-grid { grid-template-columns: 1fr 1fr; } }
+      `}</style>
 
       <header>
         <h1 style={{ fontSize: "26px" }}>🏛️ The Round Table</h1>
@@ -321,7 +360,7 @@ export default function Home() {
         </div>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "14px" }}>
+      <div className="rt-grid">
         {PERSONAS.map((p) => (
           <PersonaCard key={p.id} meta={p} state={cards[p.id]} onRetry={() => askPersona(p.id, asked)} />
         ))}
