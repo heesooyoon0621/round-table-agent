@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 
 const PERSONAS = [
-  { id: "oracle", name: "The Oracle", emoji: "🦉", tagline: "Value first" },
-  { id: "moonshot", name: "Moonshot", emoji: "🚀", tagline: "Buys the future" },
-  { id: "diamond_hands", name: "Diamond Hands", emoji: "💎", tagline: "Retail's voice" },
-  { id: "cassandra", name: "Cassandra", emoji: "🌧️", tagline: "Counts the exits" },
+  { id: "oracle", name: "The Oracle", emoji: "🦉", tagline: "Buys great businesses at fair prices — and waits" },
+  { id: "moonshot", name: "Moonshot", emoji: "🚀", tagline: "Bets big on the future, loves a dip" },
+  { id: "diamond_hands", name: "Diamond Hands", emoji: "💎", tagline: "Does his homework, sides with the little guy" },
+  { id: "cassandra", name: "Cassandra", emoji: "🌧️", tagline: "Asks what could go wrong — before anyone else" },
 ];
 
 const EXAMPLE_QUESTIONS = [
